@@ -5,162 +5,109 @@ const { protect, admin } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// Create Product
 router.post("/", protect, admin, async (req, res) => {
     try {
-        const { name,
-               description, 
-               price,
-               discountPrice,
-               countInStock,
-               category,
-               brand,
-               sizes,
-               colors,
-               collectionName,
-               material,
-               gender,
-               images,
-               isFeatured,
-               isPublished,
-               tags,
-               dimensions,
-               weight,
-               sku,
+        const {
+            name, description, price, discountPrice, countInStock,
+            category, brand, sizes, colors, collectionName, material,
+            gender, images, isFeatured, isPublished, tags, dimensions,
+            weight, sku
         } = req.body;
 
-        const product = new Product({ name,
-              description, 
-              price,
-              discountPrice,
-              countInStock,
-              category,
-              brand,
-              sizes,
-              colors,
-              collectionName,
-              material,
-              gender,
-              images,
-              isFeatured,
-              isPublished,
-              tags,
-              dimensions,
-              weight,
-              sku,
-              user: req.user._id,
-       });
+        const product = new Product({
+            name, description, price, discountPrice, countInStock,
+            category, brand, sizes, colors, collectionName, material,
+            gender, images, isFeatured, isPublished, tags, dimensions,
+            weight, sku, user: req.user._id
+        });
 
-       const createdProduct = await product.save();
-       res.status(201).json(createdProduct);
+        const createdProduct = await product.save();
+        res.status(201).json(createdProduct);
     } catch (error) {
         console.log(error);
-        res.status(500).send("Server Error")
+        res.status(500).send("Server Error");
     }
 });
 
-//@route PUT 
-router.put("/:id", protect, admin, async (req,res) => {
+// Update Product
+router.put("/:id", protect, admin, async (req, res) => {
     try {
-        const { name,
-            description, 
-            price,
-            discountPrice,
-            countInStock,
-            category,
-            brand,
-            sizes,
-            colors,
-            collectionName,
-            material,
-            gender,
-            images,
-            isFeatured,
-            isPublished,
-            tags,
-            dimensions,
-            weight,
-            sku,
-     } = req.body;
+        const {
+            name, description, price, discountPrice, countInStock,
+            category, brand, sizes, colors, collectionName, material,
+            gender, images, isFeatured, isPublished, tags, dimensions,
+            weight, sku
+        } = req.body;
 
-     const product = await Product.findById(req.params.id);
+        const product = await Product.findById(req.params.id);
 
-     if (product) {
-        product.name = name || product.name;
-        product.description = description || product.description;
-        product.price = price || product.price;
-        product.discountPrice = discountPrice || product.discountPrice;
-        product.countInStock = countInStock || product.countInStock;
-        product.category = category || product.category;
-        product.brand = brand || product.brand;
-        product.sizes = sizes || product.sizes;
-        product.colors = colors || product.colors;
-        product.collectionName = collectionName || product.collectionName;
-        product.material = material || product.material;
-        product.gender = gender || product.gender;
-        product.images = images || product.images;
-        product.isFeatured = isFeatured !== undefined ? isFeatured : product.isFeatured;
-        product.isPublished = isPublished !== undefined ? isPublished : product.isPublished;
-        product.tags = tags || product.tags;
-        product.dimensions = dimensions || product.dimensions;
-        product.weight = weight || product.weight;
-        product.sku = sku || product.sku;
+        if (product) {
+            product.name = name || product.name;
+            product.description = description || product.description;
+            product.price = price || product.price;
+            product.discountPrice = discountPrice || product.discountPrice;
+            product.countInStock = countInStock || product.countInStock;
+            product.category = category || product.category;
+            product.brand = brand || product.brand;
+            product.sizes = sizes || product.sizes;
+            product.colors = colors || product.colors;
+            product.collectionName = collectionName || product.collectionName;
+            product.material = material || product.material;
+            product.gender = gender || product.gender;
+            product.images = images || product.images;
+            product.isFeatured = isFeatured !== undefined ? isFeatured : product.isFeatured;
+            product.isPublished = isPublished !== undefined ? isPublished : product.isPublished;
+            product.tags = tags || product.tags;
+            product.dimensions = dimensions || product.dimensions;
+            product.weight = weight || product.weight;
+            product.sku = sku || product.sku;
 
-        //save updated prod
-        const updatedProduct = await product.save();
-        res.json(updatedProduct);
-     } else {
-        res.status(404).json({message: "Product not found" })
-     }
+            const updatedProduct = await product.save();
+            res.json(updatedProduct);
+        } else {
+            res.status(404).json({ message: "Product not found" });
+        }
     } catch (error) {
         console.error(error);
         res.status(500).send("Server Error");
     }
 });
 
-//@route delete
-
+// Delete Product
 router.delete("/:id", protect, admin, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
 
-        if(product) {
-
+        if (product) {
             await product.deleteOne();
-            res.json({message: "Product removed" });
+            res.json({ message: "Product removed" });
         } else {
-            res.status(404).json({message: "Product not found" });
+            res.status(404).json({ message: "Product not found" });
         }
 
     } catch (error) {
         console.error(error);
         res.status(500).send("Server Error");
-
     }
 });
 
+// Get Products with Filters
 router.get("/", async (req, res) => {
     try {
-        const {collection,
-            size,
-            color,
-            gender,
-            minPrice,
-            maxPrice,
-            sortBy,
-            search,
-            category,
-            material,
-            brand,
-            limit,
+        const {
+            collection, size, color, gender,
+            minPrice, maxPrice, sortBy, search,
+            category, material, brand, limit
         } = req.query;
 
         let query = {};
 
-        if (collection && collection.toLocaleLowerCase() !== "all") {
-            query.collections = collection;
+        if (collection && collection.toLowerCase() !== "all") {
+            query.collectionName = collection;
         }
 
-        if (collection && category.toLocaleLowerCase() !== "all") {
+        if (category && category.toLowerCase() !== "all") {
             query.category = category;
         }
 
@@ -174,7 +121,6 @@ router.get("/", async (req, res) => {
 
         if (size) {
             query.sizes = { $in: size.split(",") };
-        
         }
 
         if (color) {
@@ -187,16 +133,15 @@ router.get("/", async (req, res) => {
 
         if (minPrice || maxPrice) {
             query.price = {};
-            if(minPrice) query.price.$gte = number(minPrice);
-            if(maxPrice) query.price.$gte = number(maxPrice);
+            if (minPrice) query.price.$gte = Number(minPrice);
+            if (maxPrice) query.price.$lte = Number(maxPrice);
         }
 
         if (search) {
-            query.$or= [
+            query.$or = [
                 { name: { $regex: search, $options: "i" } },
-                { description: { $regex: search, $options: "i" } },
-
-             ];
+                { description: { $regex: search, $options: "i" } }
+            ];
         }
 
         let sort = {};
@@ -206,62 +151,58 @@ router.get("/", async (req, res) => {
                     sort = { price: 1 };
                     break;
                 case "priceDesc":
-                    sort = {price: -1 };
+                    sort = { price: -1 };
                     break;
                 case "popularity":
                     sort = { rating: -1 };
                     break;
                 default:
-                    break;                 
+                    break;
             }
         }
 
-        let products = await Product.find(query).sort(sort).limit(Number(limit) || 0);
+        const products = await Product.find(query).sort(sort).limit(Number(limit) || 0);
         res.json(products);
     } catch (error) {
         console.error(error);
-        res.status(500).send("server Error")
-    } 
+        res.status(500).send("Server Error");
+    }
 });
 
-
-//best seller
-
+// Best Seller
 router.get("/best-seller", async (req, res) => {
     try {
         const bestSeller = await Product.findOne().sort({ rating: -1 });
-        if(bestSeller) {
+        if (bestSeller) {
             res.json(bestSeller);
         } else {
-            res.status(404).json({message: "No best seller found" });
+            res.status(404).json({ message: "No best seller found" });
         }
     } catch (error) {
         console.error(error);
         res.status(500).send("Server Error");
-
     }
 });
 
-//route get new arrivals
-
+// New Arrivals
 router.get("/new-arrivals", async (req, res) => {
     try {
-        const newArrivals = await Product.find().sort({ createAt: -1 }).limit(8);
+        const newArrivals = await Product.find().sort({ createdAt: -1 }).limit(8);
         res.json(newArrivals);
     } catch (error) {
         console.error(error);
         res.status(500).send("Server Error");
-
     }
-})
+});
 
+// Get Product by ID
 router.get("/:id", async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        if(product) {
+        if (product) {
             res.json(product);
         } else {
-            res.status(404).json({message: "Product Not Found" });
+            res.status(404).json({ message: "Product Not Found" });
         }
     } catch (error) {
         console.error(error);
@@ -269,20 +210,23 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+// Get Similar Products
 router.get("/similar/:id", async (req, res) => {
     const { id } = req.params;
-    
+
     try {
         const product = await Product.findById(id);
 
-        if(!product) {
-            return res.status(404).json({message: "Product not found" });
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
         }
+
         const similarProducts = await Product.find({
-            _id: {$ne: id },
+            _id: { $ne: id },
             gender: product.gender,
             category: product.category,
         }).limit(4);
+
         res.json(similarProducts);
     } catch (error) {
         console.error(error);
